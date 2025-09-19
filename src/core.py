@@ -7,6 +7,7 @@ from typing import Callable
 
 from pycatia import catia
 from pycatia.in_interfaces.application import Application
+from pycatia.enumeration.enumeration_types import cat_vis_property_show
 from pycatia.product_structure_interfaces.product import Product
 
 
@@ -56,12 +57,3 @@ def SearchProducts(query: str) -> list[Product]:
     selection = GetCatia().active_document.selection
     selection.search(f"Name={query},all")
     return [item.value for item in selection.items()]
-
-
-def GetProduct(name: str) -> Product:
-    """Gets a product by name, raising ValueError if not found."""
-
-    try:
-        return next(product for product in SearchProducts(name) if product.name == name)
-    except StopIteration:
-        raise ValueError(f"Product {name} not found") # pylint: disable=raise-missing-from

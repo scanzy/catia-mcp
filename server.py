@@ -3,10 +3,10 @@
 # pylint: disable=invalid-name
 
 from fastmcp import FastMCP
-from pycatia.product_structure_interfaces.product import Product
 
+from src.core import SearchProducts
+from src.info import GetProductInfo
 from src.show import ShowProduct
-from src.core import SearchProducts, GetCatia, GetProduct
 
 
 mcp = FastMCP(
@@ -15,13 +15,8 @@ mcp = FastMCP(
 )
 
 
-def ProductToInfo(product: Product) -> dict[str, str]:
-    """Converts a product to a dictionary of information."""
-    return {
-        "name": product.name,
-        "part_number": product.part_number,
-        "type": product.type,
-    }
+mcp.tool(GetProductInfo, name="info")
+mcp.tool(ShowProduct, name="show")
 
 
 @mcp.tool
@@ -36,18 +31,6 @@ def search(query: str) -> list[dict[str, str]]:
         "To discover all products use the info tool.")
 
     return [ProductToInfo(product) for product in SearchProducts(query)]
-
-
-@mcp.tool
-def info(name: str = "") -> dict[str, str]:
-    """Get info about a part/product by name.
-    Leave empty to get info about the main product.
-    """
-    product = GetProduct(name) if name else GetCatia().active_document.product
-    return ProductToInfo(product)
-
-
-mcp.tool(ShowProduct, name="show")
 
 
 if __name__ == "__main__":
