@@ -56,4 +56,4 @@ def SearchProducts(query: str) -> list[Product]:
 
     selection = GetCatia().active_document.selection
     selection.search(f"Name={query},all")
-    return [item.value for item in selection.items()]
+    return [Product(item.value.com_object) for item in selection.items()]

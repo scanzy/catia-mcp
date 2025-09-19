@@ -5,7 +5,7 @@
 from fastmcp import FastMCP
 
 from src.core import SearchProducts
-from src.info import GetProductInfo
+from src.info import GetProductInfo, ProductToInfo
 from src.show import ShowProduct
 
 
@@ -13,7 +13,6 @@ mcp = FastMCP(
     name="CATIA 3D MCP Server",
     dependencies=["pycatia"],
 )
-
 
 mcp.tool(GetProductInfo, name="info")
 mcp.tool(ShowProduct, name="show")
@@ -26,9 +25,13 @@ def search(query: str) -> list[dict[str, str]]:
     DO NOT use "*" as query. To discover all products use the info tool.
     Returns a list of part numbers, names and types.
     """
+
+    if not query:
+        raise ValueError("Please specify a query.")
+
     if query == "*":
         raise ValueError("Do not use * as query."
-        "To discover all products use the info tool.")
+        "To discover the main product (and its children) use the info tool.")
 
     return [ProductToInfo(product) for product in SearchProducts(query)]
 

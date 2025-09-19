@@ -2,8 +2,10 @@
 
 # pylint: disable=invalid-name
 
+import typing as t
 from pycatia.product_structure_interfaces.product import Product
 from pycatia.enumeration.enumeration_types import cat_vis_property_show
+from pycatia.product_structure_interfaces.product_document import ProductDocument
 
 from src.core import GetCatia, UsesSelection
 
@@ -20,8 +22,8 @@ def ProductToInfo(product: Product) -> dict[str, str]:
 
 
 @UsesSelection
-def GetProductInfo(name: str = "") -> dict[str, str]:
-    """Get info about a part/product by name.
+def GetProductInfo(name: str = "", includeChildren: bool = False) -> dict[str, t.Any]:
+    """Get info about a part/product by name, with its
     Leave empty to get info about the main product.
     """
 
@@ -33,22 +35,29 @@ def GetProductInfo(name: str = "") -> dict[str, str]:
     selection = document.selection
     if name:
         selection.search(f"Name={name},all")
+
+    # or the main product
     else:
+        assert isinstance(document, ProductDocument)
         assert isinstance(document.product, Product)
         selection.add(document.product)
 
     # gets the results
-    results = selection.items()
-    if results.count == 0:
+    if selection.count2 == 0:
         raise ValueError(f"Product {name} not found")
 
     # gets info
-    itemInfo = ProductToInfo(results[0].value)
+    product = Product(selection.item2(1).value.com_object)
+    itemInfo: dict[str, t.Any] = ProductToInfo(product)
 
     # checks visibility
     itemInfo["visible"] = {
         cat_vis_property_show.index('catVisPropertyShowAttr'): True,
         cat_vis_property_show.index('catVisPropertyNoShowAttr'): False,
-    }[selection.vis_properties.get_show()]
+    }[selection.vis_properties.get_show()] # type: ignore
+
+    # builds product
+    if includeChildren:
+        itemInfo["children"] = [ProductToInfo(child) for child in product.products]
 
     return itemInfo
